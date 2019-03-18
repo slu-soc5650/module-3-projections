@@ -77,3 +77,12 @@ This is for experimenting with different `crs` values and identifying problems:
 
 ```
 
+
+
+```{r move-to-docs, include=FALSE}
+# you do need to include this in any notebook you create for this class
+fs::file_copy(here::here("examples", "lecture-10-complete.nb.html"), 
+              here::here("docs", "index.nb.html"), 
+              overwrite = TRUE)
+```
+
