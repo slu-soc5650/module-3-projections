@@ -28,11 +28,11 @@
 
 \vspace{5mm}
 \section{Directions}
-Using data accessed from the \texttt{lecture-10} repository, \texttt{USHealth}, and the \texttt{USBoundary.gdb} geodatabase, create the maps below related to health insurance rates by county for all fifty states. Your entire project folder system, including data and RMarkdown output, should be uploaded to GitHub by \textbf{Monday, March 25\textsuperscript{th}} at 4:15pm.
+Using data accessed from the \texttt{lecture-10} repository, \texttt{USHealth}, and the \texttt{US\_BOUNDARY\_Counties} shapefile, create the maps below related to health insurance rates by county for all fifty states. Your entire project folder system, including data and RMarkdown output, should be uploaded to GitHub by \textbf{Monday, March 25\textsuperscript{th}} at 4:15pm.
 
 \vspace{5mm}
 \section{Analysis Development}
-The goal of this section is to create a self contained project directory with all of the data, code, map documents, results, and documentation a project needs. Please ensure \textbf{all} required elements are present. You will need to add the \texttt{USBoundary.gdb} geodatabase to your project and export the U.S. county boundary data to a shapefile in your \texttt{data/} folder. You will also need the \texttt{US\_HEALTH\_noIns.csv} and \texttt{stateCapitals.csv} files.
+The goal of this section is to create a self contained project directory with all of the data, code, map documents, results, and documentation a project needs. Please ensure \textbf{all} required elements are present. You will need to add the \texttt{US\_BOUNDARY\_Counties} shapefile to your project. You will also need the \texttt{US\_HEALTH\_noIns.csv} and \texttt{stateCapitals.csv} files.
 
 \vspace{5mm}
 \section{Part 1: Data Preparation}
@@ -54,7 +54,7 @@ The goal of this section is to produce a stand-alone map of the contiguous Unite
 
 \begin{enumerate}
 \setcounter{enumi}{1}
-\item In a new map document, add both the county health insurance estimate and state capital shapefiles created in the previous section. Symbolize the state capitals using a symbol that includes a star, and keep them on top of the other data. Also add the state boundary data from \texttt{USBoundary.gdb} to your map.
+\item In a new map document, add both the county health insurance estimate and state capital shapefiles created in the previous section. Symbolize the state capitals using a symbol that includes a star, and keep them on top of the other data. Also add the state boundary data from the \texttt{US\_BOUNDARY\_Counties} shapefile to your map.
 \item Select a projected coordinate system for this map that is appropriate for mapping the contiguous United States (i.e. the ``lower 48'') - either the Albers or Lambert projected coordinate systems.
 \item Create a thematic choropleth map for that shows variation in the number of individuals without health insurance. Make sure to use a Color Brewer palette as well as Jenks Natural Breaks with 5 data classes for your symbology.
 \item Overlay the state boundaries (symbolized with a hollow fill) to make it easier to identify states that have not seen large decreases in the uninsured population since the introduction of the Affordable Care Act.
