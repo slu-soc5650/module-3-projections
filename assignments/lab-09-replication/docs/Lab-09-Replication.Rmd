@@ -1,0 +1,89 @@
+---
+title: "Lab 09 Replication"
+author: "Branson Fox"
+date: '(`r format(Sys.time(), "%B %d, %Y")`)'
+output: 
+  github_document: default
+  html_notebook: default 
+---
+
+## Introduction
+This notebook replicates the results of lab 09.
+
+## Dependencies
+This notebook requires the following packages to load and manipulate our data.
+
+```{r load-packages}
+# tidyverse packages
+library(readr) # import tabular data
+library(dplyr) # data manipulation
+
+# other packages
+library(here)  # file path management
+library(sf)    # methods for spatial data
+library(mapview) # interactive map preview
+```
+## Load Data
+These are the data we need to complete this lab.
+```{r load-data}
+# spatial 
+county_bnd <-st_read(here("data","US_BOUNDARY_Counties","US_BOUNDARY_Counties.shp"), stringsAsFactors = FALSE)
+# tabular
+capitals <- read_csv(here("data","stateCapitals.csv"))
+health_ins <- read_csv(here("data","USHealth","US_HEALTH_noIns.csv"))
+```
+
+## Part 1
+### Question 1
+We'll start by projecting the capitals data we loaded earlier.
+```{r p1-q1-a}
+capitals_sf <- st_as_sf(capitals, coords = c(x = "longitude", y = "latitude"), crs = 4269)
+```
+
+Then, we'll check that we projected properly using `mpaview`
+```{r p1-q1-a2}
+mapview(capitals_sf)
+```
+
+Next, we'll save the data as a shapefile using the `st_write()` function.
+
+```{r save shapefile}
+st_write(capitals_sf, dsn = here("data", "cleanData", "stateCapitals.shp"), delete_dsn = TRUE)
+```
+
+### Part B
+Next we'll work with the county boundary and health insurance data. First, we want to join these data. `GEOID` appears to be a common variable among them, but it is character in one data.frame and numeric in the other. To fix this, we can `mutate` one class to match the other.
+```{r mutate class}
+health_ins <- mutate(health_ins, GEOID = as.numeric(GEOID))
+```
+
+Now we can table join as usual.
+```{r table join}
+cnty_health <- left_join(county_bnd, health_ins, by = "GEOID")
+```
+
+### Part C
+We want to subset our data to remove the observations with missing data. Since we know that $-1$ denotes missing data, we'll `filter` for observations where `noIns` is $>=0$
+```{r filter missing}
+cnty_health <- filter(cnty_health, noIns >= 0)
+```
+
+### Part D
+We're almost ready to export the data, but first we need to check the projection. We can do this with `st_crs()`
+```{r check projection}
+st_crs(cnty_health)
+```
+And we find that there is no coordinate reference system. We can use the same `st_crs()` function to set the coordinate reference system. Note that this is different from `st_transform()` that changes data from one projection to another. Instead, we are setting the coordinate reference system to NAD 1983 (or epsg code 4269) because that is the original projection of our data.
+
+```{r set crs}
+st_crs(cnty_health) <- 4269
+```
+
+Finally, we are ready to export:
+```{r export shapefile2}
+st_write(cnty_health, dsn = here("data", "cleanData", "countyHealth.shp"), delete_dsn = TRUE)
+```
+
+
+## Part 2 - Part 4
+These parts should be completed in ArcGIS Pro. See the additional replication materials.
