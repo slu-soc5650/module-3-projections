@@ -40,7 +40,7 @@ health_ins <- read_csv(here("data","USHealth","US_HEALTH_noIns.csv"))
 ```
 
 ## Part 1
-### Question 1
+### Section A
 We'll start by projecting the capitals data we loaded earlier:
 
 ```{r p1-q1-a}
@@ -59,7 +59,7 @@ Next, we'll save the data as a shapefile using the `st_write()` function.
 st_write(capitals_sf, dsn = here("data", "cleanData", "stateCapitals.shp"), delete_dsn = TRUE)
 ```
 
-### Part B
+### Section B
 Next, we'll work with the county boundary and health insurance data. First, we want to join these data. `GEOID` appears to be a common variable among them, but it is character in one data object and numeric in the other. To fix this, we can `mutate` one class to match the other.
 
 ```{r mutate-geoid}
@@ -76,14 +76,14 @@ county_bnd <- select(county_bnd, GEOID)
 county_health <- left_join(county_bnd, health_ins, by = "GEOID")
 ```
 
-### Part C
+### Section C
 We want to subset our data to remove the observations with missing data. Since we know that `-1` denotes missing data, we'll `filter` for observations where `noIns` is `>=0`
 
 ```{r filter missing}
 county_health <- filter(county_health, noIns >= 0)
 ```
 
-### Part D
+### Section D
 We're almost ready to export the data, but first we need to check the projection. We can do this with `st_crs()`
 
 ```{r check projection}
@@ -102,14 +102,14 @@ Finally, we are ready to export:
 st_write(county_health, dsn = here("data", "cleanData", "countyHealth.shp"), delete_dsn = TRUE)
 ```
 
-### Part E
+### Section E
 Next, we want to assign map breaks to our data before we get to mapping. We'll also do this before we subset our data so that all three maps use the same breaks.
 
 ```{r map-breaks}
 county_health <- map_breaks(county_health, var = "noIns", newvar = "map_breaks", classes = 5, style = "fisher")
 ```
 
-### Part F
+### Section F
 Next, we'll download state boundary data from Tiger/Line using the `tigris` package and prepare it for mapping.
 
 ```{r get-states}
@@ -126,7 +126,7 @@ hi_boundary <- filter(states, NAME == "Hawaii")
 
 Now we have data that are specific to the three maps we'll be making.
 
-### Part G
+### Section G
 We'll also remove Alaska and Hawaii from our other data sources as well:
 
 ```{r modify-data}
@@ -142,3 +142,18 @@ hi_health <- filter(cnty_health, state == "Hawaii")
 ```
 
 Now we have our other data prepared for mapping as well.
+
+## Part 2
+### Question 2
+
+```{r}
+## state capitals
+lower48_capitals <- st_transform(lower48_capitals, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
+## state boundary
+lower48_boundary <- st_transform(lower48_boundary, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
+## health insurance data
+lower48_health <- st_transform(lower48_health, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+```
+
