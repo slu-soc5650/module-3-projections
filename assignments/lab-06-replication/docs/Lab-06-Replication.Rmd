@@ -13,16 +13,18 @@ This notebook requires the following packages to load and manipulate our data.
 
 ```{r load-packages}
 # tidyverse packages
-library(readr) # import tabular data
-library(dplyr) # data manipulation
+library(dplyr)          # data manipulation
+library(ggplot2)        # static mapping
+library(readr)          # import tabular data
 
 # spatial packages
-library(sf)    # methods for spatial data
-library(mapview) # interactive map preview
-library(tigris) # TIGER/Line Data
+library(sf)             # methods for spatial data
+library(mapview)        # interactive map preview
+library(tigris)         # TIGER/Line Data
 
 # other packages
-library(here)  # file path management
+library(here)           # file path management
+library(RColorBrewer)   # color palettes
 
 # functions
 source(here("source", "map_breaks.R"))
@@ -30,6 +32,7 @@ source(here("source", "map_breaks.R"))
 
 ## Load Data
 These are the data we need to complete this lab.
+
 ```{r load-data}
 # spatial 
 county_bnd <-st_read(here("data","US_BOUNDARY_Counties","US_BOUNDARY_Counties.shp"))
@@ -131,22 +134,23 @@ We'll also remove Alaska and Hawaii from our other data sources as well:
 
 ```{r modify-data}
 # capitals data
-lower48_capitals <- filter(capitals, name %in% c("Alaska", "Hawaii") == FALSE)
-ak_capital <- filter(capitals, name == "Alaska")
-hi_capital <- filter(capitals, name == "Hawaii")
+lower48_capitals <- filter(capitals_sf, name %in% c("Alaska", "Hawaii") == FALSE)
+ak_capital <- filter(capitals_sf, name == "Alaska")
+hi_capital <- filter(capitals_sf, name == "Hawaii")
 
 # health insurance data
-lower48_health <- filter(cnty_health, state %in% c("Alaska", "Hawaii") == FALSE)
-ak_health <- filter(cnty_health, state == "Alaska")
-hi_health <- filter(cnty_health, state == "Hawaii")
+lower48_health <- filter(county_health, state %in% c("Alaska", "Hawaii") == FALSE)
+ak_health <- filter(county_health, state == "Alaska")
+hi_health <- filter(county_health, state == "Hawaii")
 ```
 
 Now we have our other data prepared for mapping as well.
 
 ## Part 2
 ### Question 2
+We'll use the [Albers Contiguous USA](https://spatialreference.org/ref/esri/usa-contiguous-albers-equal-area-conic/) projected coordinate system, whose EPSG code is not a part of `R`'s ecosystem.
 
-```{r}
+```{r p2-q2}
 ## state capitals
 lower48_capitals <- st_transform(lower48_capitals, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
 
@@ -157,3 +161,119 @@ lower48_boundary <- st_transform(lower48_boundary, crs = "+proj=aea +lat_1=29.5 
 lower48_health <- st_transform(lower48_health, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
 ```
 
+Other options include the more general [Albers North America](https://spatialreference.org/ref/esri/102008/) coordinate system and the [Lambert North America](https://spatialreference.org/ref/esri/north-america-lambert-conformal-conic/) coordinate system.
+
+### Question 3
+Next, we'll use these data to make a map of the lower 48 states.
+
+```{r p2-q3}
+p1 <- ggplot() +
+  geom_sf(data = lower48_boundary, fill = "#ffffff", color = NA) +
+  geom_sf(data = lower48_health, mapping = aes(fill = map_breaks), lwd = .4) +
+  geom_sf(data = lower48_boundary, fill = NA, color = "#2a2a2a", size = .7) +
+  geom_sf(data = lower48_capitals, shape = 18) +
+  scale_fill_brewer(palette = "RdPu", name = "% of Residents\nwithout Insurance") +
+  labs(
+    title = "Insurance Rates by County",
+    subtitle = "Contiguous United States",
+    caption = "Data via the CDC and Christopher Prener, PhD"
+  )
+
+p1
+```
+
+### Question 4
+With our map created, we'll save it to the `results/` folder:
+
+```{r p2-q4}
+ggsave(plot = p1, filename = here("results", "lower48_map.png"))
+```
+
+## Part 3
+### Question 5
+We'll use the [Albers Alaska](https://spatialreference.org/ref/epsg/3467/) projected coordinate system, which is specifically designed for state-level mapping in Alaska.
+
+```{r p3-q5}
+## state capitals
+ak_capital <- st_transform(ak_capital, crs = 3467)
+
+## state boundary
+ak_boundary <- st_transform(ak_boundary, crs = 3467)
+
+## health insurance data
+ak_health <- st_transform(ak_health, crs = 3467)
+```
+
+The other option is the more general [Albers North America](https://spatialreference.org/ref/esri/102008/) coordinate system, though it is preferable to use state-specific coordinate systems for places like Alaska.
+
+### Question 6
+Next, we'll use these data to make a map of the Alaska. One tweak to our workflow that go above and beyond what we've covered in class is included here: I've used `scale_fill_manual()` to specify the three darkest colors form our map above. If we use the default skill from class, `scale_fill_brewer()`, it will select the first three color values from this palette.
+
+```{r p3-q6}
+p2 <- ggplot() +
+  geom_sf(data = ak_boundary, fill = "#ffffff", color = NA) +
+  geom_sf(data = ak_health, mapping = aes(fill = map_breaks), lwd = .4) +
+  geom_sf(data = ak_boundary, fill = NA, color = "#2a2a2a", size = .7) +
+  geom_sf(data = ak_capital, shape = 18, size = 4) +
+  scale_fill_manual(values = brewer.pal(name = "RdPu", n = 5)[3:5],
+                    name = "% of Residents\nwithout Insurance") +
+  labs(
+    title = "Insurance Rates by County",
+    subtitle = "Alaska Focus",
+    caption = "Data via the CDC and Christopher Prener, PhD"
+  )
+
+p2
+```
+
+This gets us reasonably close to a production quality map, though some additional tweaks, such as showing specific counties that have missing data, might make it a nicer final product.
+
+### Question 7
+With our map created, we'll save it to the `results/` folder:
+
+```{r p3-q7}
+ggsave(plot = p2, filename = here("results", "alaska_map.png"))
+```
+
+## Part 4
+### Question 8
+We'll use the [Albers Hawaii](https://spatialreference.org/ref/esri/102007/) projected coordinate system, which is specifically designed for state-level mapping in Hawaii.
+
+```{r p4-q8}
+## state capitals
+hi_capital <- st_transform(hi_capital, crs = "+proj=aea +lat_1=8 +lat_2=18 +lat_0=13 +lon_0=-157 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ")
+
+## state boundary
+hi_boundary <- st_transform(hi_boundary, crs = "+proj=aea +lat_1=8 +lat_2=18 +lat_0=13 +lon_0=-157 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ")
+
+## health insurance data
+hi_health <- st_transform(hi_health, crs = "+proj=aea +lat_1=8 +lat_2=18 +lat_0=13 +lon_0=-157 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ")
+```
+
+The other option is a variation of the UTM system that is specific to Hawaii - [Hawaii UTM Zone 4N](https://spatialreference.org/ref/sr-org/9086/).
+
+### Question 9
+Next, we'll use these data to make a map of the Hawaii. 
+
+```{r p4-q9}
+p3 <- ggplot() +
+  geom_sf(data = hi_health, mapping = aes(fill = map_breaks), color = "#2a2a2a", size = .7) +
+  geom_sf(data = hi_capital, shape = 18, size = 4) +
+  scale_fill_brewer(palette = "RdPu", name = "% of Residents\nwithout Insurance") +
+  labs(
+    title = "Insurance Rates by County",
+    subtitle = "Hawaii Focus",
+    caption = "Data via the CDC and Christopher Prener, PhD"
+  )
+
+p3
+```
+
+After playing around with this map, I decided not to use the `hi_boundary` data because it added a number of additional islands that we do not have data for.
+
+### Question 10
+With our map created, we'll save it to the `results/` folder:
+
+```{r p4-q10}
+ggsave(plot = p3, filename = here("results", "hawaii_map.png"))
+```
