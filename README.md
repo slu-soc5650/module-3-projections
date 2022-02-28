@@ -7,7 +7,7 @@ module-3-projections <img src="https://slu-soc5650.github.io/images/icon_hu137d4
 [![](https://img.shields.io/github/repo-size/slu-soc5650/module-3-projections.svg)](https://github.com/slu-soc5650/module-3-projections)
 
 ## Module 2 - Data Cleaning
-These materials correspond to the sixth course meeting of SOC 4650 and SOC 5650, which is focused on working with projections both conceptually and in `R`.
+These materials correspond to the sixth course meeting of SOC 4650 and SOC 5650, which is focused on working with projections both conceptually and in `R`. We'll also introduce some very basic work in ArcGIS Pro.
 
 ## Lesson Quick Start
 ### Install Software
