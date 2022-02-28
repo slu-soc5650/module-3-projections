@@ -1,8 +1,9 @@
 ---
-title: "Lab 06 Replication"
+title: "Lab 3-1 Replication"
 author: "Branson Fox, BA and Christopher Prener, PhD"
 date: '(`r format(Sys.time(), "%B %d, %Y")`)'
 output: github_document
+always_allow_html: true
 ---
 
 ## Introduction
@@ -152,13 +153,13 @@ We'll use the [Albers Contiguous USA](https://spatialreference.org/ref/esri/usa-
 
 ```{r p2-q2}
 ## state capitals
-lower48_capitals <- st_transform(lower48_capitals, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+lower48_capitals <- st_transform(lower48_capitals, crs = "ESRI:102003")
 
 ## state boundary
-lower48_boundary <- st_transform(lower48_boundary, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+lower48_boundary <- st_transform(lower48_boundary, crs = "ESRI:102003")
 
 ## health insurance data
-lower48_health <- st_transform(lower48_health, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+lower48_health <- st_transform(lower48_health, crs = "ESRI:102003")
 ```
 
 Other options include the more general [Albers North America](https://spatialreference.org/ref/esri/102008/) coordinate system and the [Lambert North America](https://spatialreference.org/ref/esri/north-america-lambert-conformal-conic/) coordinate system.
@@ -241,13 +242,13 @@ We'll use the [Albers Hawaii](https://spatialreference.org/ref/esri/102007/) pro
 
 ```{r p4-q8}
 ## state capitals
-hi_capital <- st_transform(hi_capital, crs = "+proj=aea +lat_1=8 +lat_2=18 +lat_0=13 +lon_0=-157 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ")
+hi_capital <- st_transform(hi_capital, crs = "ESRI:102007")
 
 ## state boundary
-hi_boundary <- st_transform(hi_boundary, crs = "+proj=aea +lat_1=8 +lat_2=18 +lat_0=13 +lon_0=-157 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ")
+hi_boundary <- st_transform(hi_boundary, crs = "ESRI:102007")
 
 ## health insurance data
-hi_health <- st_transform(hi_health, crs = "+proj=aea +lat_1=8 +lat_2=18 +lat_0=13 +lon_0=-157 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ")
+hi_health <- st_transform(hi_health, crs = "ESRI:102007")
 ```
 
 The other option is a variation of the UTM system that is specific to Hawaii - [Hawaii UTM Zone 4N](https://spatialreference.org/ref/sr-org/9086/).

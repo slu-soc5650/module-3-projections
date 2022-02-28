@@ -1,5 +1,5 @@
 ---
-title: "Meeting Examples, Completed"
+title: "Meeting Examples"
 author: "Christopher Prener, Ph.D."
 date: '(`r format(Sys.time(), "%B %d, %Y")`)'
 output: github_document
@@ -10,10 +10,10 @@ This notebook provides examples of:
 
   * working with projections with `st_transform()`, 
   * projecting points with `st_as_sf()`,
-  * symbolizing points with `ggplot2`,
   * saving geometric data with `st_read()`,
-  * calculating area with `st_area()` and the `measurements` package.
-
+  * calculating area with `st_area()` and the `measurements` package,
+  * and use the `shape` and `size` arguments with `ggplot2`.
+  
 ## Dependencies
 This notebook requires a number of packages:
 
@@ -49,6 +49,21 @@ str(sluPlaces)
 
 If they are not, use `mutate()` with `as.numeric()` to convert them.
 
+Next, we need to make sure there are no missing data in our coordinate columns. This will cause errors when we go to project these data.
+
+```{r missing}
+miss_var_summary(sluPlaces)
+```
+
+Great! We have no missing data in `lng` and `lat`. If we did, we would need to use `filter()` from `dplyr` to remove those missing values. Also be aware of coordinates that are set to 0,0. These can sometimes be used to identify missing data as well.
+
+```{r zero-coords}
+sluPlaces %>%
+  filter(lng == 0 | lat == 0)
+```
+
+Again, excellent, no missing data!
+
 ## Identifying Coordinates
 Identifying the coordinate system that `lng` and `lat` represent can be challenging:
 
@@ -63,7 +78,7 @@ Once we have candidates for projecting our points, we need to identify the CRS/E
 First, we want to convert these data to from a `tibble` to an `sf` object with `st_as_sf()`. We use the `lng` variable as our `x` variable and `lat` as our `y` variable, and use `4269` for our `crs` argument since these data are in decimal degrees and this corresponds to the likely coordinate system we identified above:
 
 ```{r project}
-sluPlaces_sf <- st_as_sf(sluPlaces, coords = c("lng", "lat"), crs = 4269)
+
 ```
 
 Next, we want to confirm that this worked:
@@ -78,7 +93,7 @@ Excellent!
 We've already used `st_transform()`, but now can do so with purpose. For example, to convert our data to State Plane (meters). We'll use the data based on the 2007 update to NAD 1983:
 
 ```{r convert-to-state-plane-m}
-sluPlaces_statePlane <- st_transform(sluPlaces_sf, crs = 3601)
+
 ```
 
 If we need our data in feet, there are also options. However, these are ESRI products that are not included in the `sf` package. How do we know? We can use the EPSG value `102696`.
@@ -90,6 +105,12 @@ st_transform(sluPlaces_sf, crs = 102696)
 Note that error includes this language - `GDAL Error 1: PROJ: proj_create_from_database: crs not found`. Even so, we can still use the coordinate system by specifying the `Proj4` string value instead of the CRS number:
 
 ```{r convert-to-state-plane-ft}
+
+```
+
+Sometimes this doesn't work, and so it is also useful to know how to apply `Proj4` strings as well.
+
+```{r convert-to-state-plane-ft}
 sluPlaces_statePlane_ft <- st_transform(sluPlaces_sf, crs = "+proj=tmerc +lat_0=35.83333333333334 +lon_0=-90.5 +k=0.9999333333333333 +x_0=250000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs ")
 ```
 
@@ -99,7 +120,7 @@ This should give us correctly projected data. Using this trick with the `Proj4` 
 Finally, we'll write our data:
 
 ```{r write-data}
-st_write(sluPlaces_statePlane, here("data", "example-data", "clean-data", "sluPlaces.shp"), delete_dsn = TRUE)
+
 ```
 
 The `st_write()` function identifies the file type from what you include at the end of the `here()` statement. If I am working solely in `R`, I tend to use `.geojson` because:
@@ -121,28 +142,25 @@ moCounties <- counties(state = 29) %>%
 There are both `ALAND` and `AWATER` columns, but it isn't immediately clear what their units are (they are in meters, FYI). If we want the total area of these units, we can combine a few functions from `sf`, `dplyr`, and `measurements` to achieve a few different outcomes. First, we'll re-calculate the area based on a **projected** coordinate system. We need to move from the current coordinate system to a projected coordinate system. To get a sense of our starting place, we'll use `st_crs()`:
 
 ```{r}
-st_crs(moCounties)
+
 ```
 
 This confirms that we are using a geographic coordinate system (this is typical for TIGER/Line data). We'll switch to Albers Equal Area Conic for the contiguous United States:
 
 ```{r}
-moCounties <- st_transform(moCounties, crs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 ```
 
 Notice how `+units=2` appears in the `Proj4` string. This means are data are in meters. If we wanted to recalculate our area units meters, we can use the `st_area()` function and the `geometry` column to do so:
 
 ```{r}
-moCounties %>%
-  select(-c("ALAND", "AWATER")) %>%
-  mutate(sq_m = as.numeric(st_area(geometry)), .after = NAMELSAD) %>%
-  mutate(sq_km = conv_unit(sq_m, from = "m2", to = "km2"), .after = sq_m) -> moCounties
+
 ```
 
 We can do the same thing if we want to convert to square miles:
 
 ```{r}
-moCounties <- mutate(moCounties, sq_mi = conv_unit(sq_m, from = "m2", to = "mi2"), .after = sq_km)
+
 ```
 
 Writing the `sq_m` column to shapefile might be tricky, so its best to do these conversions and then remove the source column before saving!
@@ -161,12 +179,3 @@ Some point symbols - those with values 21 through 25 - can be customized with fi
 ggplot() +
   geom_sf(data = sluPlaces_sf, shape = 22, size = 6, fill = "#9d4a9d", color = "#5d92e5")
 ```
-
-
-```{r move-to-docs, include=FALSE}
-# you do need to include this in any notebook you create for this class
-fs::file_copy(here::here("examples", "meeting-examples-complete.nb.html"), 
-              here::here("docs", "index.nb.html"), 
-              overwrite = TRUE)
-```
-
